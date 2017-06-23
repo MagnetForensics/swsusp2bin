@@ -2,11 +2,13 @@
 
 typedef struct _parameters_t {
     char *swapfile;
+    char *memfile;
 } parameters_t;
 
 void
 help() {
-    printf("    --input     swapfile\n");
+    printf("    --in     swapfile\n");
+    printf("    --out    extracted memory view\n");
 }
 
 bool
@@ -18,9 +20,12 @@ parse(int argc,
 
     for (int i = 0; i < argc; i++) {
         string keyword = argv[i];
-        if ((keyword == "--input") && ((i + 1) < argc)) {
+        if ((keyword == "--in") && ((i + 1) < argc)) {
             out->swapfile = argv[++i];
             status = true;
+        }
+        else if ((keyword == "--out") && ((i + 1) < argc)) {
+            out->memfile = argv[++i];
         }
     }
 
@@ -61,10 +66,11 @@ int main(
     int argc,
     char **argv)
 {
-    parameters_t params;
+    parameters_t params = { 0 };
     char *buffer = NULL;
     swap_map_page *map_page = NULL;
     FILE * file = NULL;
+    FILE * out = NULL;
     size_t result;
 
     printf("swsusp2bin\n");
@@ -79,7 +85,15 @@ int main(
     file = fopen(params.swapfile, "r");
     if (file == NULL) {
         printf("error: can't open file.\n");
-        return false;
+        goto cleanup;
+    }
+
+    if (params.memfile) {
+        out = fopen(params.memfile, "w");
+        if (out == NULL) {
+            printf("error: can't create file.\n");
+            goto cleanup;
+        }
     }
 
     swsusp_header = (struct swsusp_header *)malloc(PAGE_SIZE);
@@ -100,9 +114,11 @@ int main(
     uint64_t map_table_offset = swsusp_header->image * PAGE_SIZE;
 
     printf("image: 0x%I64x\n", map_table_offset);
-
     map_page = (struct swap_map_page *)malloc(PAGE_SIZE);
     if (map_page == NULL) goto cleanup;
+
+    buffer = (char *)malloc(PAGE_SIZE);
+    if (!buffer) goto cleanup;
 
     int pages_count = 0;
 
@@ -115,15 +131,23 @@ int main(
         result = fread(map_page, 1, PAGE_SIZE, file);
         if (result != PAGE_SIZE) {
             printf("error: can't read page table (result = 0x%x, map_table_offset = 0x%x).\n", result, (long)map_table_offset);
-            goto cleanup;
+            // goto cleanup;
         }
 
         for (int i = 0; map_page->entries[i] && (i < MAP_PAGE_ENTRIES); i++) {
             printf("[0x%llx][%4d] = 0x%llx\n", map_table_offset, i, map_page->entries[i]);
+
+            if (out) {
+                uint64_t page_offset = map_page->entries[i] * PAGE_SIZE;
+                fseek(file, (long)page_offset, SEEK_SET);
+                fread(buffer, 1, PAGE_SIZE, file);
+                fwrite(buffer, 1, PAGE_SIZE, out);
+            }
+
             pages_count++;
         }
 
-        printf("gap is %d pages\n", (uint32_t)(map_page->next_swap - (map_table_offset / PAGE_SIZE)));
+        if (map_page->next_swap) printf("gap is %d pages\n", (uint32_t)(map_page->next_swap - (map_table_offset / PAGE_SIZE)));
         map_table_offset = map_page->next_swap * PAGE_SIZE;
     }
 
@@ -132,6 +156,7 @@ int main(
 cleanup:
     if (map_page) free(map_page);
     if (buffer) free(buffer);
+    if (out) fclose(out);
     if (file) fclose(file);
     return true;
 }

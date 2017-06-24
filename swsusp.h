@@ -10,6 +10,7 @@
 */
 #define SF_PLATFORM_MODE	1
 #define SF_NOCOMPRESS_MODE	2
+#define SF_CRC32_MODE	    4
 
 #define HIBERNATE_SIG	"S1SUSPEND"
 
@@ -48,14 +49,13 @@ struct swap_map_handle {
 };
 
 struct swsusp_header {
-    char reserved[PAGE_SIZE - 20 - sizeof(sector_t) - sizeof(int)];
+    char reserved[PAGE_SIZE - 20 - sizeof(sector_t) - sizeof(int) - sizeof(u32)];
+    u32	crc32;
     sector_t image;
     unsigned int flags;	/* Flags to pass to the "boot" kernel */
     char	orig_sig[10];
     char	sig[10];
 } __declspec(align(1));
-
-static struct swsusp_header *swsusp_header;
 
 /**
 *	The following functions are used for tracing the allocated

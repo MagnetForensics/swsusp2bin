@@ -142,12 +142,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="lzo.h" />
+    <ClInclude Include="lzodefs.h" />
     <ClInclude Include="rbtree.h" />
     <ClInclude Include="swsusp.h" />
     <ClInclude Include="swsusp2bin.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="lzo1x_decompress.cpp" />
     <ClCompile Include="swsusp2bin.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -11,16 +11,7 @@ using namespace std;
 #include "swsusp.h"
 
 #include "lzo.h"
-#include "lzodefs.h"
 
-#define __get_free_page(x) malloc(PAGE_SIZE);
-#define free_page(x) free((char *)x);
-
-#define vmalloc malloc
-#define vfree free
-#define printk printf
-#define KERN_ERR "error: "
-#define KERN_INFO "info: "
 
 #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 

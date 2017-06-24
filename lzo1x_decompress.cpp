@@ -18,7 +18,8 @@
 //#include <linux/lzo.h>
 #include "swsusp2bin.h"
 #include "lzo.h"
-#include "lzodefs.h"
+
+#define M2_MAX_OFFSET   0x0800
 
 #define HAVE_IP(x, ip_end, ip) ((size_t)(ip_end - ip) < (x))
 #define HAVE_OP(x, op_end, op) ((size_t)(op_end - op) < (x))

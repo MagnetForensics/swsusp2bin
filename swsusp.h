@@ -2,7 +2,6 @@
 #define __SWSUSP_H__
 
 #include "types.h"
-#include "rbtree.h"
 
 /*
 * Flags that can be passed from the hibernatig hernel to the "boot" kernel in
@@ -36,18 +35,6 @@ struct swap_map_page {
     sector_t next_swap;
 };
 
-/**
-*	The swap_map_handle structure is used for handling swap in
-*	a file-alike way
-*/
-
-struct swap_map_handle {
-    struct swap_map_page *cur;
-    sector_t cur_swap;
-    sector_t first_sector;
-    unsigned int k;
-};
-
 struct swsusp_header {
     char reserved[PAGE_SIZE - 20 - sizeof(sector_t) - sizeof(int) - sizeof(u32)];
     u32	crc32;
@@ -56,18 +43,5 @@ struct swsusp_header {
     char	orig_sig[10];
     char	sig[10];
 } __declspec(align(1));
-
-/**
-*	The following functions are used for tracing the allocated
-*	swap pages, so that they can be freed in case of an error.
-*/
-
-struct swsusp_extent {
-    struct rb_node node;
-    unsigned long start;
-    unsigned long end;
-};
-
-static struct rb_root swsusp_extents = { NULL };
 
 #endif

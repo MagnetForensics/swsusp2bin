@@ -237,14 +237,14 @@ int main(
                         fread(buffer, 1, PAGE_SIZE, file);
                         fseek(out, (long)page_offset, SEEK_SET);
                         result = fwrite(buffer, 1, PAGE_SIZE, out);
-                        if (verbose_mode) printf("debug: wrote 0x%x bytes at %x.\n", result, page_offset);
+                        if (verbose_mode) printf("debug: wrote 0x%x bytes at %llx.\n", result, page_offset);
                     }
 
                     i += 1;
                     pages_count++;
 
                 } else {
-                    int count = ((int)compressed_size + PAGE_SIZE) / PAGE_SIZE;
+                    int count = (int)DIV_ROUND_UP(compressed_size, PAGE_SIZE);
                     if (verbose_mode) printf("skip %d pages...\n", count);
 
                     if (out) {
@@ -281,7 +281,7 @@ int main(
                     fread(buffer, 1, PAGE_SIZE, file);
                     fseek(out, (long)page_offset, SEEK_SET);
                     result = fwrite(buffer, 1, PAGE_SIZE, out);
-                    if (verbose_mode) printf("debug: wrote 0x%x bytes at %x.\n", result, page_offset);
+                    if (verbose_mode) printf("debug: wrote 0x%x bytes at %llx.\n", result, page_offset);
                 }
 
                 i += 1;

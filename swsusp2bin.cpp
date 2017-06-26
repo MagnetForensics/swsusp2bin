@@ -19,7 +19,7 @@ bool mode_32 = false;
 void
 help() {
     printf("    --in         swapfile\n");
-    printf("    --out        extracted memory view\n");
+    printf("    --out        output file. extracted memory view. (optional)\n");
     printf("    --verbose    display debug messages\n");
     printf("    -32          32-bits mode. (default = 64-bits)\n");
 }
@@ -345,6 +345,8 @@ int main(
     FILE * file = NULL;
     FILE * out = NULL;
 
+    uint64_t highmem = 0;
+
     unsigned char *uncompressed_buffer = NULL;
     unsigned char *compressed_buffer = NULL;
 
@@ -377,6 +379,8 @@ int main(
     print_header();
 
     if (!is_swapfile_valid()) goto cleanup;
+
+    highmem = get_last_highmem_page(file);
 
     uint64_t map_table_offset = get_map_table_offset();
 
@@ -483,6 +487,7 @@ int main(
     }
     printf("\n");
 
+    printf("debug: highmem = 0x%llx (%d MB)\n", highmem, (int)(highmem / (1024 * 1024)));
     printf("debug: total page count = 0x%x (%d MB)\n", pages_count, (pages_count * PAGE_SIZE) / (1024 * 1024));
     printf("debug: total non compressed pages = 0x%x (%d MB)\n", err_pages_count, (err_pages_count * PAGE_SIZE) / (1024 * 1024));
 

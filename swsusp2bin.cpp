@@ -351,6 +351,11 @@ int main(
     unsigned char *compressed_buffer = NULL;
 
     printf("swsusp2bin\n");
+    
+
+    wprintf(L"\n"
+            L"  swsusp2bin v1.0\n"
+            L"  Copyright (C) 2017, Comae Technologies DMCC <http://www.comae.io>\n\n");
 
     if (!parse(argc, argv, &params)) {
         help();

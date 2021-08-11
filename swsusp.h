@@ -47,22 +47,30 @@ struct swap_map_page64 {
     uint64_t next_swap;
 };
 
-struct swsusp_header32 {
+#if defined(_MSC_VER)
+    #define ALIGN(bytes) __declspec(align(bytes))
+#elif defined(__GNUC__)
+    #define ALIGN(bytes) __attribute__((aligned(bytes)))
+#else
+    #error "Unexpected compiler"
+#endif
+
+struct ALIGN(1) swsusp_header32 {
     char reserved[PAGE_SIZE - 20 - sizeof(uint32_t) - sizeof(int) - sizeof(u32)];
     u32	crc32;
     uint32_t image;
     unsigned int flags;	/* Flags to pass to the "boot" kernel */
     char	orig_sig[10];
     char	sig[10];
-} __declspec(align(1));
+};
 
-struct swsusp_header64 {
+struct ALIGN(1) swsusp_header64 {
     char reserved[PAGE_SIZE - 20 - sizeof(uint64_t) - sizeof(int) - sizeof(u32)];
     u32	crc32;
     uint64_t image;
     unsigned int flags;	/* Flags to pass to the "boot" kernel */
     char	orig_sig[10];
     char	sig[10];
-} __declspec(align(1));
+};
 
 #endif

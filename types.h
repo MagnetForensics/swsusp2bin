@@ -5,10 +5,8 @@
 
 #ifdef CONFIG_LBDAF
 typedef uint64_t sector_t;
-typedef uint64_t blkcnt_t;
 #else
 typedef unsigned long sector_t;
-typedef unsigned long blkcnt_t;
 #endif
 
 typedef uint64_t u64;

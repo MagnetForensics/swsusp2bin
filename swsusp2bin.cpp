@@ -114,7 +114,7 @@ print_header() {
         memset(signature, 0, sizeof(signature));
         memcpy_s(signature, sizeof(signature), swsusp_header64->sig, sizeof(swsusp_header64->sig));
         printf("swsusp_header.sig = %s\n", signature);
-        printf("swsusp_header.image = %I64x\n", swsusp_header64->image);
+        printf("swsusp_header.image = %lx\n", swsusp_header64->image);
         printf("swsusp_header.flags = %x\n", swsusp_header64->flags);
         printf("swsusp_header.flags[SF_PLATFORM_MODE] = %s\n", swsusp_header64->flags & SF_PLATFORM_MODE ? "TRUE" : "FALSE");
         printf("swsusp_header.flags[SF_NOCOMPRESS_MODE] = %s\n", swsusp_header64->flags & SF_NOCOMPRESS_MODE ? "TRUE" : "FALSE");
@@ -196,7 +196,7 @@ get_last_highmem_page(
 
         result = fread(map_page, 1, PAGE_SIZE, handle);
         if (result != PAGE_SIZE) {
-            printf("%s: error: can't read page table (result = 0x%x, map_table_offset = 0x%x).\n", __FUNCTION__, result, (long)map_table_offset);
+            printf("%s: error: can't read page table (result = 0x%lx, map_table_offset = 0x%lx).\n", __FUNCTION__, result, (long)map_table_offset);
             goto cleanup;
         }
 
@@ -233,13 +233,13 @@ read_file_at(
     if (buffer_size) size = buffer_size;
 
     if (fseek(file, (long)offset, SEEK_SET)) {
-        printf("error: can't change the offset to 0x%llx.\n", offset);
+        printf("error: can't change the offset to 0x%lx.\n", offset);
         goto cleanup;
     }
 
     result = fread(buffer, 1, size, file);
     if (result != size) {
-        printf("error: can't read data at 0x%llx. result = 0x%x\n", offset, result);
+        printf("error: can't read data at 0x%lx. result = 0x%lx\n", offset, result);
         goto cleanup;
     }
 
@@ -264,16 +264,16 @@ write_file_at(
     if (buffer_size) size = buffer_size;
 
     if (fseek(file, (long)offset, SEEK_SET)) {
-        printf("error: can't change the offset to 0x%llx.\n", offset);
+        printf("error: can't change the offset to 0x%lx.\n", offset);
         goto cleanup;
     }
 
     result = fwrite(buffer, 1, size, file);
     if (result != size) {
-        printf("error: can't write data at 0x%llx. result = 0x%x\n", offset, result);
+        printf("error: can't write data at 0x%lx. result = 0x%lx\n", offset, result);
         goto cleanup;
     }
-    if (verbose_mode) printf("debug: wrote data at 0x%llx.\n", offset);
+    if (verbose_mode) printf("debug: wrote data at 0x%lx.\n", offset);
     status = true;
 
 cleanup:
@@ -302,7 +302,7 @@ readwrite(
         goto cleanup;
     }
 
-    if (verbose_mode) printf("debug: wrote 0x%x bytes at %llx.\n", buffer_size, offset);
+    if (verbose_mode) printf("debug: wrote 0x%x bytes at %lx.\n", buffer_size, offset);
 
     status = true;
 cleanup:
@@ -387,9 +387,10 @@ int main(
 
     highmem = get_last_highmem_page(file);
 
-    uint64_t map_table_offset = get_map_table_offset();
+    uint64_t map_table_offset;
+    map_table_offset = get_map_table_offset();
 
-    if (verbose_mode) printf("image: 0x%I64x\n", map_table_offset);
+    if (verbose_mode) printf("image: 0x%lx\n", map_table_offset);
     map_page = (void *)malloc(PAGE_SIZE);
     if (map_page == NULL) goto cleanup;
 
@@ -404,19 +405,22 @@ int main(
         if (!compressed_buffer) goto cleanup;
     }
 
-    int pages_count = 0;
-    int err_pages_count = 0;
+    int pages_count;
+    pages_count = 0;
+
+    int err_pages_count;
+    err_pages_count = 0;
 
     while (map_table_offset) {
         if (!read_file_at(file, map_table_offset, map_page, PAGE_SIZE)) {
-            printf("error: Can't read page table (map_table_offset = 0x%x).\n", (long)map_table_offset);
+            printf("error: Can't read page table (map_table_offset = 0x%lx).\n", (long)map_table_offset);
             goto cleanup;
         }
 
         int i = 0;
         while (get_page_entry_by_index(map_page, i) && (i < get_max_page_entries())) {
             uint64_t map_page_entry = get_page_entry_by_index(map_page, i);
-            if (verbose_mode) printf("[0x%llx][%4d] = 0x%llx / 0x%llx.\n", map_table_offset, i, map_page_entry, map_page_entry * PAGE_SIZE);
+            if (verbose_mode) printf("[0x%lx][%4d] = 0x%lx / 0x%lx.\n", map_table_offset, i, map_page_entry, map_page_entry * PAGE_SIZE);
 
             uint64_t compressed_size = 0;
             uint64_t page_offset = map_page_entry * PAGE_SIZE;
@@ -426,7 +430,7 @@ int main(
                     printf("error: Can't read compressed size in the block header.\n");
                     goto cleanup;
                 }
-                if (verbose_mode) printf("debug: compressed buffer size = 0x%llx\n", compressed_size);
+                if (verbose_mode) printf("debug: compressed buffer size = 0x%lx\n", compressed_size);
 
                 if (!compressed_size || (compressed_size > lzo1x_worst_compress(LZO_UNC_SIZE))) {
                     if (verbose_mode) printf("error: Invalid LZO compressed length (worse: 0x%x)\n", lzo1x_worst_compress(LZO_UNC_SIZE));
@@ -483,7 +487,7 @@ int main(
         }
 
         uint64_t next_swap = get_page_map_next_swap(map_page);
-        if (verbose_mode) printf("map_page->next_swap = 0x%llx\n", next_swap);
+        if (verbose_mode) printf("map_page->next_swap = 0x%lx\n", next_swap);
         if (next_swap) {
             if (verbose_mode) printf("gap between the two page map table is %d pages\n", (uint32_t)(next_swap - (map_table_offset / PAGE_SIZE)));
             else printf(".");
@@ -492,7 +496,7 @@ int main(
     }
     printf("\n");
 
-    printf("debug: highmem = 0x%llx (%d MB)\n", highmem, (int)(highmem / (1024 * 1024)));
+    printf("debug: highmem = 0x%lx (%d MB)\n", highmem, (int)(highmem / (1024 * 1024)));
     printf("debug: total page count = 0x%x (%d MB)\n", pages_count, (pages_count * PAGE_SIZE) / (1024 * 1024));
     printf("debug: total non compressed pages = 0x%x (%d MB)\n", err_pages_count, (err_pages_count * PAGE_SIZE) / (1024 * 1024));
 

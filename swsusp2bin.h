@@ -26,3 +26,12 @@ using namespace std;
 #define LZO_CMP_PAGES	DIV_ROUND_UP(lzo1x_worst_compress(LZO_UNC_SIZE) + \
 			             LZO_HEADER, PAGE_SIZE)
 #define LZO_CMP_SIZE	(LZO_CMP_PAGES * PAGE_SIZE)
+
+#if defined(_MSC_VER)
+    // do nothing
+#elif defined(__GNUC__)
+    #include <cstring>
+    #define memcpy_s(a, b, c, d) memcpy(a, c, d)
+#else
+    #error "Unexpected compiler"
+#endif

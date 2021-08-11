@@ -47,30 +47,34 @@ struct swap_map_page64 {
     uint64_t next_swap;
 };
 
+// XXX: Removed the `align(1)` declaration because MSVC complained when I
+// switched to `alignas(1)`, so it seems like that's just wrong.  Adding
+// packing instead.
+
 #if defined(_MSC_VER)
-    #define ALIGN(bytes) __declspec(align(bytes))
+    #define PACKED(decl) __pragma(pack(push, 1)) decl __pragma(pack(pop))
 #elif defined(__GNUC__)
-    #define ALIGN(bytes) __attribute__((aligned(bytes)))
+    #define PACKED(decl) decl __attribute__((__packed__))
 #else
     #error "Unexpected compiler"
 #endif
 
-struct ALIGN(1) swsusp_header32 {
+PACKED(struct swsusp_header32 {
     char reserved[PAGE_SIZE - 20 - sizeof(uint32_t) - sizeof(int) - sizeof(u32)];
     u32	crc32;
     uint32_t image;
     unsigned int flags;	/* Flags to pass to the "boot" kernel */
     char	orig_sig[10];
     char	sig[10];
-};
+});
 
-struct ALIGN(1) swsusp_header64 {
+PACKED(struct swsusp_header64 {
     char reserved[PAGE_SIZE - 20 - sizeof(uint64_t) - sizeof(int) - sizeof(u32)];
     u32	crc32;
     uint64_t image;
     unsigned int flags;	/* Flags to pass to the "boot" kernel */
     char	orig_sig[10];
     char	sig[10];
-};
+});
 
 #endif
